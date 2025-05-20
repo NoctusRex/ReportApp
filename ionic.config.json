@@ -1,0 +1,7 @@
+{
+  "name": "DmmibReport",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
