@@ -47,6 +47,10 @@ jobs:
       - name: Generate icons and splash screen to android folder
         run: if [ -d "./resources" ]; then npm install @capacitor/assets --save-dev && npx capacitor-assets generate --android; fi
 
+      - name: Make ./gradlew command executable
+        working-directory: ./nutrition-tracker/
+        run: cd android && chmod +x ./gradlew && cd ..
+
       - name: Build app bundle
         run: cd android && ./gradlew bundle && ./gradlew assembleDebug
 
