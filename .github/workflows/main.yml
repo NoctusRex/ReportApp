@@ -1,0 +1,2 @@
+- name: capacitor-android-action
+  uses: Narottam04/action-capacitor-android@v1.0.0
