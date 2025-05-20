@@ -1,72 +1,85 @@
 name: Build Android
-run-name: Creating Production Ready Android App 🚀
+run-name: Build Production Android App 🚀
+
 on:
   push:
     branches:
       - master
 
 jobs:
-  build:
-    name: Build APK
+  build-android:
+    name: Build Android APK & AAB
     runs-on: ubuntu-latest
-    # TODO: add the default directory - COMMENT IF IT'S NOT IN SUBFOLDER
-    # defaults:
-    #   run:
-    #     working-directory: ./frontend
+
     steps:
-      - name: Checkout source
+      - name: Checkout Repository
         uses: actions/checkout@v3
-        # TODO: add your branch to checkout
         with:
           ref: master
 
-      - name: Setup java
-        uses: actions/setup-java@v3
-        with:
-          distribution: "zulu"
-          java-version: "21"
-
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 21.x
+          node-version: 18 # Angular/Capacitor supports 18 LTS
 
-      - name: install dependencies
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Cache Node Modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install Dependencies
         run: npm ci
 
-      - name: Create Build Folder
-        run: npm run build
+      - name: Build Angular App
+        run: npm run build --prod
 
-      - name: Add android folder if not present
+      - name: Add Android platform (if needed)
         run: if [ ! -d "./android" ]; then npx cap add android; fi
 
-      - name: Capacitor copy
-        run: npx cap copy
+      - name: Capacitor Sync
+        run: npx cap sync android
 
-      # TODO: Check for folder structure in README for generating splash screen
-      - name: Generate icons and splash screen to android folder
-        run: if [ -d "./resources" ]; then npm install @capacitor/assets --save-dev && npx capacitor-assets generate --android; fi
-
-      - name: Make ./gradlew command executable
-        working-directory: ./dmmib-report/
-        run: cd android && chmod +x ./gradlew && cd ..
-
-      - name: Build app bundle
-        run: cd android && ./gradlew bundle && ./gradlew assembleDebug
-
-      - name: Check folder content of android output
-        run: ls ./android/app/build/outputs/bundle/release
-
-      - name: Set Tag
-        id: current-datetime
-        run: echo "CURRENT_DATETIME=$(date +'%Y-%m-%d-%H_%M_%S%z')" >> "$GITHUB_OUTPUT"
-
-      - name: Build Release
-        shell: bash
+      - name: Generate Splash & Icons (Optional)
         run: |
-          hub release create ${{ steps.current-datetime.outputs.CURRENT_DATETIME }} \
-          -m ${{ steps.current-datetime.outputs.CURRENT_DATETIME }} \
-          -a ./android/app/build/outputs/bundle/release/app-release-signed.aab \
-          -a ./android/app/build/outputs/apk/debug/app-debug.apk
+          if [ -d "./resources" ]; then
+            npm install @capacitor/assets --save-dev
+            npx capacitor-assets generate --android
+          fi
+
+      - name: Update Gradle Settings (Optional Safety Check)
+        run: |
+          sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' android/app/build.gradle || true
+          sed -i 's/JavaVersion.VERSION_20/JavaVersion.VERSION_17/g' android/app/build.gradle || true
+
+      - name: Build APK & AAB
+        run: |
+          cd android
+          ./gradlew bundleRelease
+          ./gradlew assembleDebug
+
+      - name: Check Output Directory
+        run: ls -R ./android/app/build/outputs/
+
+      - name: Tag Release
+        id: tag
+        run: echo "TAG_NAME=$(date +'%Y-%m-%d-%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.TAG_NAME }}
+          name: Android Build ${{ steps.tag.outputs.TAG_NAME }}
+          files: |
+            android/app/build/outputs/bundle/release/app-release.aab
+            android/app/build/outputs/apk/debug/app-debug.apk
         env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
