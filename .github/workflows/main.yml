@@ -60,6 +60,9 @@ jobs:
           sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' android/app/build.gradle || true
           sed -i 's/JavaVersion.VERSION_20/JavaVersion.VERSION_17/g' android/app/build.gradle || true
 
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
       - name: Build APK & AAB
         run: |
           cd android
