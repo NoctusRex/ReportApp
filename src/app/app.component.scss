@@ -24,6 +24,16 @@ ion-menu.md ion-list#inbox-list ion-list-header {
   min-height: 20px;
 }
 
+.file-upload {
+  display: inline-block;
+  padding: 0 0 0 60px;
+  cursor: pointer;
+}
+
+input[type=file] {
+  color: transparent;
+}
+
 ion-menu.md ion-list#labels-list ion-list-header {
   font-size: 16px;
 

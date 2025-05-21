@@ -1,5 +1,5 @@
-import {ActionSheetController} from "@ionic/angular/standalone";
 import {Injectable} from "@angular/core";
+import {ActionSheetController} from "@ionic/angular";
 
 
 @Injectable({providedIn: 'root'})

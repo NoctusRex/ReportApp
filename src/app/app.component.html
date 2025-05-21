@@ -2,6 +2,8 @@
   <ion-menu contentId="main-content" type="overlay">
     <ion-header>
       <ion-toolbar color="light">
+        <ion-progress-bar value="1"></ion-progress-bar>
+
         <ion-title>DMMIB Reports</ion-title>
       </ion-toolbar>
     </ion-header>
@@ -23,7 +25,18 @@
     <ion-footer>
       <ion-toolbar color="light">
         <ion-item color="light" lines="none">
-          <ion-toggle (ionChange)="toggleChange($event)" [(ngModel)]="paletteToggle">Dark Mode</ion-toggle>
+          <ion-toggle (ionChange)="toggleChange($event)" [(ngModel)]="paletteToggle" color="medium">Dark Mode
+          </ion-toggle>
+        </ion-item>
+        <ion-item (click)="download()" button color="light">
+          Export
+          <ion-icon color="medium" name="cloud-download" slot="end"></ion-icon>
+        </ion-item>
+        <ion-item color="light">
+          Import
+          <input (change)="onImportFileChange($event)" accept=".json" class="file-upload" type="file">
+          <ion-icon (click)="upload()" [color]="file ? 'success' : 'medium'" id="open-loading" name="cloud-upload"
+                    slot="end"></ion-icon>
         </ion-item>
       </ion-toolbar>
     </ion-footer>
