@@ -21,6 +21,7 @@ import {LocalStorageService} from "../../services/local-storage.service";
 })
 export class ReportsPage implements ViewDidEnter {
   data = signal([] as Array<Report>);
+  progressBarColor = 'primary';
 
   constructor(private actionSheet: ActionSheetService, private router: Router, private storageService: LocalStorageService) {
   }
@@ -38,6 +39,8 @@ export class ReportsPage implements ViewDidEnter {
   }
 
   delete(report: Report): void {
+    this.progressBarColor = 'danger';
+
     this.actionSheet.show("Should the report be deleted?", [
       {
         text: 'Yes, delete the report.',
@@ -52,6 +55,8 @@ export class ReportsPage implements ViewDidEnter {
         this.data.update(reports => reports.filter(item => item.id !== report.id));
         this.storageService.setReports(this.data());
       }
+    }).finally(() => {
+      this.progressBarColor = 'primary';
     });
   }
 

@@ -62,6 +62,10 @@ export class AddPage implements OnInit {
     return !this.form.valid;
   }
 
+  get progressBarColor(): string {
+    return this.disabled ? "danger" : this.id ? "primary" : "success";
+  }
+
   ngOnInit() {
     this.activatedRoute.params.subscribe(params => {
       const id = params['id'] ?? undefined;
