@@ -1,5 +1,5 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
+  <ion-toolbar color="light">
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
@@ -7,7 +7,7 @@
     <ion-title>{{ id ? 'Edit ' + id : 'Add' }}</ion-title>
 
     <ion-buttons slot="end">
-      <ion-button (click)="submit()" [disabled]="disabled">
+      <ion-button (click)="submit()" [disabled]="disabled" color="medium">
         <ion-icon name="save" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -29,41 +29,32 @@
       <ion-select-option *ngFor="let game of getGames()" [value]="game">{{ game }}</ion-select-option>
     </ion-select>
 
-    <ion-input #personInput
-               (keydown.backspace)="removeInput(personInput, 'persons')"
-               (keydown.enter)="addInput(personInput, 'persons')"
-               [errorText]="getErrorText('personsValidator')"
-               fill="outline" formControlName="personsValidator"
-               id="personInput" label="Players" label-placement="fixed" name="personInput"
-               placeholder="Enter players"
-    >
-    </ion-input>
-    <ion-item lines="none">
-      <div class="chips-wrapper">
-        <ion-chip *ngFor="let person of this.form?.get('persons')?.value; let i = index" color="primary" outline="true">
-          <ion-label>{{ person }}</ion-label>
-          <ion-icon (click)="removeInputByIndex(i, 'persons')" class="remove-chip" name="close"></ion-icon>
-        </ion-chip>
-      </div>
-    </ion-item>
+    <br><br>
 
-    <ion-input #judgeInput
-               (keydown.backspace)="removeInput(judgeInput, 'judges')"
-               (keydown.enter)="addInput(judgeInput, 'judges')"
-               [errorText]="getErrorText('judgesValidator')"
-               fill="outline" formControlName="judgesValidator"
-               id="judgeInput" label="Judges" label-placement="fixed" name="judgeInput"
-               placeholder="Enter judges"
-    >
-    </ion-input>
-    <ion-item lines="none">
-      <div class="chips-wrapper">
-        <ion-chip *ngFor="let person of this.form?.get('judges')?.value; let i = index" color="primary" outline="true">
-          <ion-label>{{ person }}</ion-label>
-          <ion-icon (click)="removeInputByIndex(i, 'judges')" class="remove-chip" name="close"></ion-icon>
-        </ion-chip>
-      </div>
-    </ion-item>
+    <div *ngFor="let key of ['persons', 'judges']">
+      <ion-input #personInput
+                 (keydown.backspace)="removeInput(personInput, key)"
+                 (keydown.enter)="addInput(personInput, key)"
+                 [errorText]="getErrorText(key + 'Validator')"
+                 [formControlName]="key + 'Validator'" [label]="key === 'persons' ? 'Players' : 'Judges'"
+                 fill="outline" id="personInput" label-placement="fixed"
+                 name="personInput"
+                 placeholder="confirm with button/enter"
+      >
+        <ion-button (click)="addInput(personInput, key)" color="medium" slot="end">
+          <ion-icon name="add" slot="icon-only"></ion-icon>
+        </ion-button>
+      </ion-input>
+      <ion-item lines="none">
+        <div class="chips-wrapper">
+          <ion-chip *ngFor="let person of this.form?.get(key)?.value; let i = index" color="dark" outline="true">
+            <ion-label>{{ person }}</ion-label>
+            <ion-icon (click)="removeInputByIndex(i, key)" class="remove-chip" color="danger" name="close"></ion-icon>
+          </ion-chip>
+        </div>
+      </ion-item>
+      <br><br>
+    </div>
 
     <ion-textarea [autoGrow]="true" [errorText]="getErrorText('problem')" fill="outline" formControlName="problem"
                   label="Problem" label-placement="floating"

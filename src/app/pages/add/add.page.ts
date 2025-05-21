@@ -107,6 +107,8 @@ export class AddPage implements OnInit {
   }
 
   addInput(input: IonInput, id: string): void {
+    input.setFocus();
+
     if (!input.value) {
       return;
     }
