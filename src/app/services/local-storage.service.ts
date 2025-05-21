@@ -3,6 +3,8 @@ import {Report} from "../models/report.model";
 
 @Injectable({providedIn: 'root'})
 export class LocalStorageService {
+  REPORT_KEY = "DMMIB_REPORTS_REPORTS";
+
   getGames(year?: number): Array<string> {
     const g = [
       {year: 2025, name: "3 Chapters"},
