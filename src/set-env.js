@@ -16,7 +16,7 @@ console.log('Generating environment.prod.ts...'); // You can add colors.cyan() h
 //    and assuming they are uppercase in Vercel (e.g., FIREBASE_API_KEY, not firebase_apiKey).
 const envConfigFile = `export const environment = {
   production: true,
-  firebase: {
+  firebaseConfig: {
     apiKey: '${process.env.firebase_apiKey}',
     authDomain: '${process.env.firebase_authDomain}',
     projectId: '${process.env.firebase_projectId}',
