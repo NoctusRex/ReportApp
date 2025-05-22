@@ -1,58 +1,68 @@
 import {Injectable} from "@angular/core";
 import {Report} from "../models/report.model";
+import {Game, StorageService} from "./storage.service";
+import {concatMap, map, Observable, of} from "rxjs";
 
-@Injectable({providedIn: 'root'})
-export class LocalStorageService {
+@Injectable()
+export class LocalStorageService extends StorageService {
   REPORT_KEY = "DMMIB_REPORTS_REPORTS";
 
-  getGames(year?: number): Array<string> {
-    const g = [
+  override getGames(): Observable<Array<Game>> {
+    return of([
       {year: 2025, name: "3 Chapters"},
       {year: 2025, name: "Die Blumenstraße"},
       {year: 2025, name: "Funkenschlag: Outpost"},
-      {year: 2025, name: "Rajas of the Ganges: Cards & Karma"}];
-
-    if (year) {
-      return g.filter(x => x.year === year).map(x => x.name);
-    }
-
-    return g.map(x => x.name);
+      {year: 2025, name: "Rajas of the Ganges: Cards & Karma"}
+    ]);
   }
 
-  getReports(): Array<Report> {
+  override getReports(): Observable<Array<Report>> {
     const json = localStorage.getItem(this.REPORT_KEY);
-    if (!json) return [];
+    if (!json) return of([]);
 
-    return JSON.parse(json);
+    return of(JSON.parse(json));
   }
 
-  getReport(id: number): Report | undefined {
-    return this.getReports().find(x => Number(x.id) === Number(id));
+  override getReport(id: number): Observable<Report | undefined> {
+    return this.getReports().pipe(map(reports => reports.find(x => Number(x.id) === Number(id))));
   }
 
-  setReports(reports: Array<Report>): void {
+  override deleteReport(id: number): Observable<void> {
+    return this.getReports().pipe(
+      map(reports => reports.filter(item => item.id !== id)),
+      concatMap(reports => this.setReports(reports))
+    );
+  }
+
+  override setReports(reports: Array<Report>): Observable<void> {
     localStorage.setItem(this.REPORT_KEY, JSON.stringify(reports));
+
+    return of(undefined);
   }
 
-  addOrUpdateReport(report: Report): void {
-    const reports = this.getReports();
-    let existing = reports.find(x => Number(x.id) === Number(report.id));
+  override addOrUpdateReport(report: Report): Observable<void> {
+    return this.getReports().pipe(
+      map(reports => {
+        let existing = reports.find(x => Number(x.id) === Number(report.id));
 
-    console.warn("addOrUpdate", {reports, report: {...report}, existing});
+        if (existing) {
+          existing.id = Number(report.id);
+          existing.year = Number(report.year);
+          existing.solution = report.solution;
+          existing.game = report.game;
+          existing.judges = report.judges;
+          existing.problem = report.problem;
+          existing.persons = report.persons;
+        } else {
+          report.id = Math.max(Math.max(...reports.map(x => Number(x.id))) + 1, 1);
+          reports.push(report);
+        }
 
-    if (existing) {
-      existing.id = Number(report.id);
-      existing.year = Number(report.year);
-      existing.solution = report.solution;
-      existing.game = report.game;
-      existing.judges = report.judges;
-      existing.problem = report.problem;
-      existing.persons = report.persons;
-    } else {
-      report.id = Math.max(Math.max(...reports.map(x => Number(x.id))) + 1, 1);
-      reports.push(report);
-    }
+        this.setReports(reports);
 
-    this.setReports(reports);
+        return undefined;
+      })
+    );
   }
+
 }

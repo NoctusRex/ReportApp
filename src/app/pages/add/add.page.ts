@@ -3,8 +3,8 @@ import {CommonModule} from "@angular/common";
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {IonicModule, IonInput} from "@ionic/angular";
 import {ActivatedRoute, Router} from "@angular/router";
-import {LocalStorageService} from "../../services/local-storage.service";
 import {Report} from "../../models/report.model";
+import {Game, StorageService} from "../../services/storage.service";
 
 @Component({
   selector: 'app-add',
@@ -22,6 +22,7 @@ import {Report} from "../../models/report.model";
 export class AddPage implements OnInit {
 
   id: number | undefined = undefined;
+  games: Array<Game> = [];
 
   form = new FormGroup({
     id: new FormControl<number | undefined>({disabled: true, value: undefined}, Validators.required),
@@ -55,7 +56,7 @@ export class AddPage implements OnInit {
     solution: new FormControl<string | undefined>(undefined, Validators.required)
   });
 
-  constructor(private activatedRoute: ActivatedRoute, private storageService: LocalStorageService, private router: Router) {
+  constructor(private activatedRoute: ActivatedRoute, private storageService: StorageService, private router: Router) {
   }
 
   get disabled() {
@@ -72,32 +73,44 @@ export class AddPage implements OnInit {
       this.id = id ? Number(id) : undefined;
 
       if (this.id) {
-        const existing = this.storageService.getReport(this.id);
-
-        if (existing) {
-          this.form.patchValue({
-            ...existing,
-            persons: existing.persons,
-            judges: existing.judges,
-            judgesValidator: undefined,
-            personsValidator: undefined
-          });
-        }
+        this.storageService.getReport(this.id).subscribe(existing => {
+          if (existing) {
+            this.form.patchValue({
+              ...existing,
+              persons: existing.persons,
+              judges: existing.judges,
+              judgesValidator: undefined,
+              personsValidator: undefined
+            });
+          }
+        });
       } else {
         this.form.patchValue({id: undefined, year: new Date().getFullYear()});
       }
     });
+
+    this.storageService.getGames().subscribe(x => {
+      this.games = x;
+    });
   }
 
   submit(): void {
-    this.storageService.addOrUpdateReport({...this.form.value, id: this.id} as Report);
-
-    this.router.navigate(['reports']);
+    delete this.form.value.judgesValidator;
+    delete this.form.value.personsValidator
+    
+    this.storageService.addOrUpdateReport({...this.form.value, id: this.id} as Report).subscribe(() => {
+      this.router.navigate(['reports']);
+    });
   }
 
   getGames() {
     const year = this.form.get("year")?.value;
-    return this.storageService.getGames(year ? Number(year) : undefined);
+
+    if (year ? Number(year) : undefined) {
+      return this.games.filter(x => Number(x.year) === Number(year)).map(x => x.name);
+    }
+
+    return this.games.map(x => x.name);
   }
 
   getErrorText(id: string): string | null {

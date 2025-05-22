@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
-import {LocalStorageService} from "./services/local-storage.service";
 import {Report} from "./models/report.model";
 import {ActionSheetService} from "./services/action-sheet.service";
+import {StorageService} from "./services/storage.service";
 
 @Component({
   selector: 'app-root',
@@ -12,13 +12,14 @@ import {ActionSheetService} from "./services/action-sheet.service";
 export class AppComponent implements OnInit {
   paletteToggle = false;
   file: File | null = null;
+  showImportButton = false;
 
   public appPages = [
     {title: 'Reports', url: '/reports', icon: 'clipboard'},
     {title: 'Add', url: '/report', icon: 'add-circle'}
   ];
 
-  constructor(private localStorage: LocalStorageService, private actionSheetService: ActionSheetService) {
+  constructor(private storageService: StorageService, private actionSheetService: ActionSheetService) {
   }
 
   ngOnInit(): void {
@@ -43,22 +44,18 @@ export class AppComponent implements OnInit {
 
   download(): void {
     // HAIL THE AI OVERLORD
-    const jsonStr = JSON.stringify(this.localStorage.getReports(), null, 2); // pretty print
+    this.storageService.getReports().subscribe(reports => {
+      const jsonStr = JSON.stringify(reports, null, 2);
+      const blob = new Blob([jsonStr], {type: 'application/json'});
+      const url = window.URL.createObjectURL(blob);
 
-    // Create a Blob from the JSON string
-    const blob = new Blob([jsonStr], {type: 'application/json'});
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'export.json';
+      a.click();
 
-    // Create a download link
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'export.json';
-
-    // Trigger the download
-    a.click();
-
-    // Cleanup
-    window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(url);
+    })
   }
 
   onImportFileChange(event: any): void {
@@ -85,7 +82,7 @@ export class AppComponent implements OnInit {
           return;
         }
 
-        this.localStorage.setReports(data);
+        this.storageService.setReports(data).subscribe();
         window.location.reload();
       });
     }).finally(() => {

@@ -32,7 +32,7 @@
           Export
           <ion-icon color="medium" name="cloud-download" slot="end"></ion-icon>
         </ion-item>
-        <ion-item color="light">
+        <ion-item *ngIf="showImportButton" color="light">
           Import
           <input (change)="onImportFileChange($event)" accept=".json" class="file-upload" type="file">
           <ion-icon (click)="upload()" [color]="file ? 'success' : 'medium'" id="open-loading" name="cloud-upload"
