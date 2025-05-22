@@ -23,7 +23,11 @@ import {environment} from "../environments/environment.prod";
     FormsModule
   ],
   providers: [
-    provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
+    provideFirebaseApp(() => {
+      console.warn(environment);
+      
+      return initializeApp(environment.firebaseConfig)
+    }),
     provideFirestore(() => getFirestore()),
     provideAuth(() => getAuth()),
     {
