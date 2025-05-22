@@ -17,13 +17,13 @@ console.log('Generating environment.prod.ts...'); // You can add colors.cyan() h
 const envConfigFile = `export const environment = {
   production: true,
   firebaseConfig: {
-    apiKey: '${process.env.firebase_apiKey}',
-    authDomain: '${process.env.firebase_authDomain}',
-    projectId: '${process.env.firebase_projectId}',
-    storageBucket: '${process.env.firebase_storageBucket}',
-    messagingSenderId: '${process.env.firebase_messagingSenderId}',
-    appId: '${process.env.firebase_appId}',
-    measurementId: '${process.env.firebase_measurementId}'
+    apiKey: '${process.env.firebase_apiKey.replace(/['"]+/g, '')}',
+    authDomain: '${process.env.firebase_authDomain.replace(/['"]+/g, '')}',
+    projectId: '${process.env.firebase_projectId.replace(/['"]+/g, '')}',
+    storageBucket: '${process.env.firebase_storageBucket.replace(/['"]+/g, '')}',
+    messagingSenderId: '${process.env.firebase_messagingSenderId.replace(/['"]+/g, '')}',
+    appId: '${process.env.firebase_appId.replace(/['"]+/g, '')}',
+    measurementId: '${process.env.firebase_measurementId.replace(/['"]+/g, '')}'
   }
 };
 `;
