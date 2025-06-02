@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
-import {Report} from "./models/report.model";
-import {ActionSheetService} from "./services/action-sheet.service";
-import {StorageService} from "./services/storage.service";
+import {FireBaseStorageService} from "./services/firebase-storage.service";
+import {ModalService} from "./services/modal.service";
+import {LocalStorageService} from "./services/local-storage.service";
 
 @Component({
   selector: 'app-root',
@@ -12,14 +12,14 @@ import {StorageService} from "./services/storage.service";
 export class AppComponent implements OnInit {
   paletteToggle = false;
   file: File | null = null;
-  showImportButton = false;
+  judge: string | null = null;
 
   public appPages = [
     {title: 'Reports', url: '/reports', icon: 'clipboard'},
     {title: 'Add', url: '/report', icon: 'add-circle'}
   ];
 
-  constructor(private storageService: StorageService, private actionSheetService: ActionSheetService) {
+  constructor(private storageService: FireBaseStorageService, private modalService: ModalService, private localStorageService: LocalStorageService) {
   }
 
   ngOnInit(): void {
@@ -27,6 +27,12 @@ export class AppComponent implements OnInit {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
     this.initializeDarkPalette(prefersDark.matches);
     prefersDark.addEventListener('change', (mediaQuery) => this.initializeDarkPalette(mediaQuery.matches));
+
+    this.judge = this.localStorageService.getJudgeName();
+    if (!this.judge) {
+      this.setJudgeName(true);
+    }
+
   }
 
   initializeDarkPalette(isDark: boolean) {
@@ -58,35 +64,7 @@ export class AppComponent implements OnInit {
     })
   }
 
-  onImportFileChange(event: any): void {
-    this.file = event.target.files[0];
-  }
-
-  upload(): void {
-    if (this.file?.type !== 'application/json') {
-      return;
-    }
-
-    this.file.text().then(json => {
-      const data = JSON.parse(json) as Array<Report>;
-
-      if (!data) {
-        return;
-      }
-
-      this.actionSheetService.show("Uploading data overwrites existing data.", [{
-        text: "Ok, continue.",
-        role: 'ok'
-      }, {text: "No, cancel.", role: 'cancel'}]).then(result => {
-        if (result !== 'ok') {
-          return;
-        }
-
-        this.storageService.setReports(data).subscribe();
-        window.location.reload();
-      });
-    }).finally(() => {
-      this.file = null;
-    });
+  setJudgeName(force = false): void {
+    this.modalService.getJudgeName(this.judge ?? undefined, force).subscribe(x => this.judge = x);
   }
 }

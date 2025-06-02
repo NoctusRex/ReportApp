@@ -25,48 +25,37 @@
                label-placement="fixed"
     ></ion-input>
 
-    <ion-select [errorText]="getErrorText('game')" fill="outline" formControlName="game"
-                label="Game" label-placement="fixed"
-    >
-      <ion-select-option *ngFor="let game of getGames()" [value]="game">{{ game }}</ion-select-option>
-    </ion-select>
-
     <ion-progress-bar [color]="progressBarColor"></ion-progress-bar>
 
-    <div *ngFor="let key of ['persons', 'judges']">
-      <ion-input #personInput
-                 (keydown.backspace)="removeInput(personInput, key)"
-                 (keydown.enter)="addInput(personInput, key)"
-                 [errorText]="getErrorText(key + 'Validator')"
-                 [formControlName]="key + 'Validator'" [label]="key === 'persons' ? 'Players' : 'Judges'"
-                 fill="outline" id="personInput" label-placement="fixed"
-                 name="personInput"
-                 placeholder="confirm with button/enter"
-      >
-        <ion-button (click)="addInput(personInput, key)" color="medium" slot="end">
-          <ion-icon name="add" slot="icon-only"></ion-icon>
-        </ion-button>
-      </ion-input>
+    @for (key of ['judges', 'persons']; track key) {
+      <ion-item (click)="addName(key)" button color="light" detail="true" detail-icon="add-circle" lines="full">
+        <ion-label>{{ key === 'persons' ? 'Players' : 'Judges' }}</ion-label>
+        <ion-badge color="danger" slot="end">{{ getErrorText(key + 'Validator') }}</ion-badge>
+      </ion-item>
       <ion-item lines="none">
         <div class="chips-wrapper">
-          <ion-chip *ngFor="let person of this.form?.get(key)?.value; let i = index" color="dark" outline="true">
+          <ion-chip *ngFor="let person of this.form?.get(key)?.value; let i = index" outline="true">
             <ion-label>{{ person }}</ion-label>
-            <ion-icon (click)="removeInputByIndex(i, key)" class="remove-chip" color="danger" name="close"></ion-icon>
+            <ion-icon (click)="removeInputByIndex(i, key)" class="remove-chip" color="danger"
+                      name="close"></ion-icon>
           </ion-chip>
         </div>
       </ion-item>
-    </div>
+    }
 
     <ion-progress-bar [color]="progressBarColor"></ion-progress-bar>
 
+    <ion-select [errorText]="getErrorText('level')" fill="outline" formControlName="level"
+                interface="popover" label="Level" label-placement="fixed"
+    >
+      <ion-select-option *ngFor="let level of ['pre-warning' , 'warning' , 'strike']" [value]="level">{{ level }}
+      </ion-select-option>
+    </ion-select>
+
     <br>
 
-    <ion-textarea [autoGrow]="true" [errorText]="getErrorText('problem')" fill="outline" formControlName="problem"
-                  label="Problem" label-placement="floating"
-    ></ion-textarea>
-    <br>
-    <ion-textarea [autoGrow]="true" [errorText]="getErrorText('solution')" fill="outline" formControlName="solution"
-                  label="Solution" label-placement="floating"
+    <ion-textarea [autoGrow]="true" [errorText]="getErrorText('report')" fill="outline" formControlName="report"
+                  label="Report" label-placement="floating"
     ></ion-textarea>
   </form>
 </ion-content>

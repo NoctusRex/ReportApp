@@ -1,4 +1,3 @@
-import {Game, StorageService} from "./storage.service";
 import {
   collection,
   collectionData,
@@ -16,10 +15,12 @@ import {BehaviorSubject, concatMap, finalize, from, map, Observable, take, tap} 
 import {inject, Injectable, Injector, runInInjectionContext} from "@angular/core";
 import {Auth, signInAnonymously} from "@angular/fire/auth";
 import {LoadingController} from "@ionic/angular";
+import {Game} from "../models/game.model";
+import {Team} from "../models/team.model";
 
 
-@Injectable()
-export class FireBaseStorageService extends StorageService {
+@Injectable({providedIn: 'root'})
+export class FireBaseStorageService {
 
   private loadingController = inject(LoadingController);
   private injector = inject(Injector);
@@ -29,12 +30,10 @@ export class FireBaseStorageService extends StorageService {
   private user: any;
 
   constructor() {
-    super();
-
     signInAnonymously(this.auth).then(x => this.user = x);
   }
 
-  override getGames(): Observable<Array<Game>> {
+  getGames(): Observable<Array<Game>> {
     if (this.games.value && this.games.value.length > 0) {
       return this.games.pipe(take(1));
     }
@@ -46,14 +45,14 @@ export class FireBaseStorageService extends StorageService {
     }).pipe(take(1), tap(games => this.games.next(games)));
   }
 
-  override getReports(): Observable<Array<Report>> {
+  getReports(): Observable<Array<Report>> {
     return this.runInContext(() => {
       const reportsRef = collection(this.firestore, 'reports');
       return (collectionData(reportsRef, {idField: 'id'}) as Observable<Report[]>).pipe(take(1));
     });
   }
 
-  override getReport(id: number): Observable<Report | undefined> {
+  getReport(id: number): Observable<Report | undefined> {
     return this.runInContext(() => {
       const reportsRef = doc(this.firestore, `reports/${id}`);
 
@@ -61,7 +60,7 @@ export class FireBaseStorageService extends StorageService {
     });
   }
 
-  override deleteReport(id: number): Observable<void> {
+  deleteReport(id: number): Observable<void> {
     return this.runInContext(() => {
       const reportRef = doc(this.firestore, `reports/${id}`);
 
@@ -69,11 +68,7 @@ export class FireBaseStorageService extends StorageService {
     });
   }
 
-  override setReports(reports: Array<Report>): Observable<void> {
-    throw new Error("Method not implemented.");
-  }
-
-  override addOrUpdateReport(report: Report): Observable<void> {
+  addOrUpdateReport(report: Report): Observable<void> {
     return this.getHighestReportId().pipe(
       concatMap(lastId => {
         return this.runInContext(() => {
@@ -108,6 +103,60 @@ export class FireBaseStorageService extends StorageService {
           }
         })
       );
+    });
+  }
+
+  getJudges(): Observable<Array<string>> {
+    return this.runInContext(() => {
+      const reportsRef = collection(this.firestore, 'judges');
+      return (collectionData(reportsRef, {idField: 'id'}) as Observable<Array<{
+        id: string
+      }>>).pipe(
+        take(1),
+        map(x => x?.map(y => y.id) || []));
+    });
+  }
+
+  addOrUpdateJudge(judge: string): Observable<void> {
+    return this.runInContext(() => {
+      const reportRef = doc(this.firestore, `judges/${judge}`);
+
+      return from(setDoc(reportRef, {id: judge}));
+    });
+  }
+
+  deleteJudge(id: string): Observable<void> {
+    return this.runInContext(() => {
+      const reportRef = doc(this.firestore, `judges/${id}`);
+
+      return from(deleteDoc(reportRef));
+    });
+  }
+
+  getTeams(): Observable<Array<Team>> {
+    return this.runInContext(() => {
+      const reportsRef = collection(this.firestore, 'teams');
+
+      return (collectionData(reportsRef, {idField: 'id'}) as Observable<Array<Team>>).pipe(
+        take(1),
+        map(x => {
+          x.forEach((r) => {
+            if (!r.players) {
+              r.players = [];
+            }
+          })
+
+          return x;
+        })
+      )
+    });
+  }
+
+  addOrUpdateTeamPlayers(team: Team): Observable<void> {
+    return this.runInContext(() => {
+      const reportRef = doc(this.firestore, `teams/${team.id}`);
+
+      return from(setDoc(reportRef, team));
     });
   }
 

@@ -1,11 +1,11 @@
-import {Component, signal} from '@angular/core';
+import {Component, OnInit, signal} from '@angular/core';
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {IonicModule, ViewDidEnter} from "@ionic/angular";
 import {Report} from "../../models/report.model";
 import {ActionSheetService} from "../../services/action-sheet.service";
 import {Router} from "@angular/router";
-import {StorageService} from "../../services/storage.service";
+import {FireBaseStorageService} from "../../services/firebase-storage.service";
 
 
 @Component({
@@ -19,11 +19,18 @@ import {StorageService} from "../../services/storage.service";
   ],
   standalone: true
 })
-export class ReportsPage implements ViewDidEnter {
+export class ReportsPage implements ViewDidEnter, OnInit {
   data = signal([] as Array<Report>);
   progressBarColor = 'primary';
 
-  constructor(private actionSheet: ActionSheetService, private router: Router, private storageService: StorageService) {
+
+  constructor(private actionSheet: ActionSheetService,
+              private router: Router,
+              private storageService: FireBaseStorageService) {
+  }
+
+  ngOnInit(): void {
+    this.ionViewDidEnter();
   }
 
   ionViewDidEnter(): void {

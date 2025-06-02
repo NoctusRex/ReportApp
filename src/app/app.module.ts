@@ -7,12 +7,12 @@ import {IonicModule, IonicRouteStrategy} from '@ionic/angular';
 import {AppComponent} from './app.component';
 import {AppRoutingModule} from './app-routing.module';
 import {FormsModule} from "@angular/forms";
-import {StorageService} from "./services/storage.service";
-import {FireBaseStorageService} from "./services/firebase-storage.service";
 import {initializeApp, provideFirebaseApp} from '@angular/fire/app';
 import {getFirestore, provideFirestore} from '@angular/fire/firestore';
 import {getAuth, provideAuth} from "@angular/fire/auth";
 import {environment} from "../environments/environment.prod";
+import {SelectJudgeModal} from "./modals/select-judge.modal";
+import {SelectPlayerModal} from "./modals/select-player.modal";
 
 @NgModule({
   declarations: [AppComponent],
@@ -20,12 +20,12 @@ import {environment} from "../environments/environment.prod";
     BrowserModule,
     IonicModule.forRoot(),
     AppRoutingModule,
-    FormsModule
+    FormsModule,
+    SelectJudgeModal,
+    SelectPlayerModal
   ],
   providers: [
     provideFirebaseApp(() => {
-      console.warn(environment);
-      
       return initializeApp(environment.firebaseConfig)
     }),
     provideFirestore(() => getFirestore()),
@@ -33,11 +33,8 @@ import {environment} from "../environments/environment.prod";
     {
       provide: RouteReuseStrategy,
       useClass: IonicRouteStrategy
-    },
-    {
-      provide: StorageService,
-      useClass: FireBaseStorageService
-    }],
+    }
+  ],
   bootstrap: [AppComponent],
 })
 export class AppModule {

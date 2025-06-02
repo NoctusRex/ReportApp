@@ -22,8 +22,18 @@
   <ion-list>
     <ion-item-sliding *ngFor="let report of data()">
       <ion-item (click)="open(report)" button lines="full">
-        <ion-badge slot="end">{{ report.id }}</ion-badge>
-        <ion-label class="ion-text-nowrap">{{ report.problem }}</ion-label>
+        <ion-badge [color]="report.level === 'warning' ? 'warning' : report.level === 'strike' ? 'danger' : 'success'"
+                   slot="end">
+          <ion-icon
+            [name]="report.level === 'warning' ? 'alert' : report.level === 'strike' ? 'warning' : 'information'"
+          ></ion-icon>
+        </ion-badge>
+
+        <ion-label class="ion-text-nowrap">
+          @for (person of report.persons.sort(); track person) {
+            <p>{{ person }}</p>
+          }
+        </ion-label>
       </ion-item>
       <ion-item-options>
         <ion-item-option (click)="delete(report)" color="danger">

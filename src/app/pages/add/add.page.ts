@@ -1,10 +1,12 @@
 import {Component, OnInit} from '@angular/core';
 import {CommonModule} from "@angular/common";
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
-import {IonicModule, IonInput} from "@ionic/angular";
+import {IonicModule} from "@ionic/angular";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Report} from "../../models/report.model";
-import {Game, StorageService} from "../../services/storage.service";
+import {Report, ReportLevel} from "../../models/report.model";
+import {FireBaseStorageService} from "../../services/firebase-storage.service";
+import {LocalStorageService} from "../../services/local-storage.service";
+import {ModalService} from "../../services/modal.service";
 
 @Component({
   selector: 'app-add',
@@ -14,7 +16,6 @@ import {Game, StorageService} from "../../services/storage.service";
     CommonModule,
     FormsModule,
     IonicModule,
-    FormsModule,
     ReactiveFormsModule,
   ],
   standalone: true
@@ -22,7 +23,6 @@ import {Game, StorageService} from "../../services/storage.service";
 export class AddPage implements OnInit {
 
   id: number | undefined = undefined;
-  games: Array<Game> = [];
 
   form = new FormGroup({
     id: new FormControl<number | undefined>({disabled: true, value: undefined}, Validators.required),
@@ -35,7 +35,6 @@ export class AddPage implements OnInit {
         return {error: "Invalid Date"};
       }]
     }),
-    game: new FormControl<string | undefined>(undefined, Validators.required,),
     persons: new FormControl<Array<string> | undefined>(undefined, Validators.required),
     personsValidator: new FormControl<string | undefined>(undefined, _control => {
       if ((this.form?.get("persons")?.value || []).length > 0) {
@@ -52,11 +51,15 @@ export class AddPage implements OnInit {
 
       return {error: "At least one judge is required"};
     }),
-    problem: new FormControl<string | undefined>(undefined, Validators.required),
-    solution: new FormControl<string | undefined>(undefined, Validators.required)
+    report: new FormControl<string | undefined>(undefined, Validators.required),
+    level: new FormControl<ReportLevel | undefined>(undefined, Validators.required)
   });
 
-  constructor(private activatedRoute: ActivatedRoute, private storageService: StorageService, private router: Router) {
+  constructor(private activatedRoute: ActivatedRoute,
+              private storageService: FireBaseStorageService,
+              private router: Router,
+              private localStorageService: LocalStorageService,
+              private modalService: ModalService) {
   }
 
   get disabled() {
@@ -85,32 +88,23 @@ export class AddPage implements OnInit {
           }
         });
       } else {
-        this.form.patchValue({id: undefined, year: new Date().getFullYear()});
+        const judge = this.localStorageService.getJudgeName();
+        this.form.patchValue({
+          id: undefined,
+          year: new Date().getFullYear(),
+          judges: judge ? [judge] : undefined
+        });
       }
-    });
-
-    this.storageService.getGames().subscribe(x => {
-      this.games = x;
     });
   }
 
   submit(): void {
     delete this.form.value.judgesValidator;
     delete this.form.value.personsValidator
-    
+
     this.storageService.addOrUpdateReport({...this.form.value, id: this.id} as Report).subscribe(() => {
       this.router.navigate(['reports']);
     });
-  }
-
-  getGames() {
-    const year = this.form.get("year")?.value;
-
-    if (year ? Number(year) : undefined) {
-      return this.games.filter(x => Number(x.year) === Number(year)).map(x => x.name);
-    }
-
-    return this.games.map(x => x.name);
   }
 
   getErrorText(id: string): string | null {
@@ -123,27 +117,27 @@ export class AddPage implements OnInit {
     )?.[1] ?? null;
   }
 
-  addInput(input: IonInput, id: string): void {
-    input.setFocus();
-
-    if (!input.value) {
+  addInput(input: string, id: string): void {
+    if (!input) {
       return;
     }
 
     const inputs = this.form.get(id)?.value || [];
-    this.form.get(id)?.setValue([...inputs, input.value as string]);
+    this.form.get(id)?.setValue([...inputs, input]);
     this.form.get(`${id}Validator`)?.updateValueAndValidity();
-    input.value = undefined;
   }
 
-  removeInput(input: IonInput, id: string): void {
-    if (input.value) {
-      return;
-    }
+  addName(key: string): void {
+    const year = this.form.get("year")?.value;
 
-    const inputs = this.form.get(id)?.value || [];
-    this.form.get(id)?.setValue(inputs.slice(0, inputs.length - 1));
-    this.form.get(`${id}Validator`)?.updateValueAndValidity();
+    (key === 'judges' ? this.modalService.getJudgeName(undefined, false, false) : this.modalService.getPlayerName(year))
+      .subscribe(x => {
+        if (!x) {
+          return;
+        }
+
+        this.addInput(x, key);
+      });
   }
 
   removeInputByIndex(index: number, id: string): void {
